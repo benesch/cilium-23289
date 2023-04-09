@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+kubectl --context=kind-cilium-repro logs -f deployment/long-conn --timestamps

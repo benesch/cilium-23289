@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+# Create kind cluster with Kubernetes installed.
+kind create cluster --config=resources/kind-config.yaml --name=cilium-repro
+cilium install --context=kind-cilium-repro --version=v1.12.8
+
+# Enable egress gateway on node cilium-repro-worker.
+kubectl --context=kind-cilium-repro patch configmap -n kube-system cilium-config --patch-file resources/cilium-config.yml
+kubectl --context=kind-cilium-repro label nodes cilium-repro-worker egress-node=true
+kubectl --context=kind-cilium-repro rollout restart ds cilium -n kube-system
+kubectl --context=kind-cilium-repro rollout restart deploy cilium-operator -n kube-system
+kubectl --context=kind-cilium-repro rollout status deploy/cilium-operator -n kube-system --timeout=60s
+
+# Install egress policy to route traffic through gateway.
+kubectl --context=kind-cilium-repro apply -f resources/egress-policy.yml
+
+echo "sleeping 60s to let cilium notice egress policy"
+sleep 60
+
+# Start workloads.
+kubectl --context=kind-cilium-repro apply -f resources/long-conn-deployment.yml
+kubectl --context=kind-cilium-repro apply -f resources/short-conn-deployment.yml
+
+kubectl --context=kind-cilium-repro rollout status deploy/long-conn --timeout=3m
+kubectl --context=kind-cilium-repro rollout status deploy/short-conn --timeout=3m
+
+# Print out egress list.
+kubectl --context=kind-cilium-repro exec -n kube-system ds/cilium -- cilium bpf egress list
+
+echo "creation successful"

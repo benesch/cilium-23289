@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+pod=$(kubectl --context=kind-cilium-repro get pod -n kube-system -l k8s-app=cilium --field-selector spec.nodeName=cilium-repro-worker -o name)
+kubectl --context=kind-cilium-repro exec -n kube-system "$pod" -- bash -c "cilium bpf ct flush global"

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: long-conn
+  labels:
+    app: long-conn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: long-conn
+  template:
+    metadata:
+      labels:
+        app: long-conn
+        egress: "true"
+    spec:
+      containers:
+      - name: long-conn
+        image: benesch/long-conn
+        imagePullPolicy: Always
+      # Keep it off the egress gateway.
+      nodeName: cilium-repro-worker3
+  strategy:
+    type: Recreate

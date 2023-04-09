@@ -1,0 +1,16 @@
+apiVersion: cilium.io/v2
+kind: CiliumEgressGatewayPolicy
+metadata:
+  name: egress
+spec:
+  selectors:
+  - podSelector:
+      matchLabels:
+        egress: "true"
+  destinationCIDRs:
+  - "0.0.0.0/0"
+  egressGateway:
+    nodeSelector:
+      matchLabels:
+        egress-node: "true"
+

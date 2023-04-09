@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+pod=$(kubectl --context=kind-cilium-repro get pod -n kube-system -l k8s-app=cilium --field-selector spec.nodeName=cilium-repro-worker -o name)
+workload_ip=$(kubectl --context=kind-cilium-repro get pod -l app=long-conn -o jsonpath='{.items[*].status.podIP}')
+kubectl --context=kind-cilium-repro exec -n kube-system "$pod" -- bash -c "while :; do date; cilium bpf nat list | wc -l; cilium bpf nat list | grep -F $workload_ip; sleep 5; done"

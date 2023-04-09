@@ -1,0 +1,8 @@
+data:
+  enable-bpf-masquerade: "true"
+  enable-ipv4-egress-gateway: "true"
+  enable-l7-proxy: "false"
+  kube-proxy-replacement: strict
+  # Trigger garbage collection of the conntrack table every 90s, to speed up the
+  # reproduction. In production, this happens every 20-30m.
+  conntrack-gc-interval: 90s
